@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
   static const background = Color(0xFFF8FAFC);
@@ -17,6 +16,8 @@ class AppTheme {
   static ThemeData get lightTheme {
     final base = ThemeData(
       useMaterial3: true,
+      fontFamily: 'Source Sans 3',
+      materialTapTargetSize: MaterialTapTargetSize.padded,
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         onPrimary: Colors.white,
@@ -30,21 +31,25 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
     );
 
-    final textTheme = GoogleFonts.sourceSans3TextTheme(base.textTheme).copyWith(
-      bodyLarge: GoogleFonts.sourceSans3(
+    final textTheme = base.textTheme.copyWith(
+      bodyLarge: const TextStyle(
+        fontFamily: 'Source Sans 3',
         fontSize: 16,
         color: AppColors.text,
       ),
-      bodyMedium: GoogleFonts.sourceSans3(
+      bodyMedium: const TextStyle(
+        fontFamily: 'Source Sans 3',
         fontSize: 15,
         color: AppColors.text,
       ),
-      titleLarge: GoogleFonts.sourceSans3(
+      titleLarge: const TextStyle(
+        fontFamily: 'Source Sans 3',
         fontSize: 24,
         fontWeight: FontWeight.w700,
         color: AppColors.text,
       ),
-      titleMedium: GoogleFonts.sourceSans3(
+      titleMedium: const TextStyle(
+        fontFamily: 'Source Sans 3',
         fontSize: 19,
         fontWeight: FontWeight.w600,
         color: AppColors.text,
@@ -85,6 +90,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
+        errorMaxLines: 5,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
@@ -95,7 +101,8 @@ class AppTheme {
           minimumSize: const Size(48, 56),
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          textStyle: GoogleFonts.sourceSans3(
+          textStyle: const TextStyle(
+            fontFamily: 'Source Sans 3',
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -109,7 +116,8 @@ class AppTheme {
           minimumSize: const Size(48, 56),
           foregroundColor: AppColors.primary,
           side: const BorderSide(color: AppColors.primary),
-          textStyle: GoogleFonts.sourceSans3(
+          textStyle: const TextStyle(
+            fontFamily: 'Source Sans 3',
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../state/app_state.dart';
+import '../models/money.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_button.dart';
 
@@ -10,6 +12,7 @@ class P07ResumenCompraScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final expense = state.expenseCents;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Resumen de compra')),
@@ -54,18 +57,21 @@ class P07ResumenCompraScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(20),
                       child: Column(
                         children: [
-                          const Text('Gasto registrado'),
-                          const SizedBox(height: 8),
                           Text(
-                            '${state.expense.toStringAsFixed(2)} €',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
-                                ?.copyWith(
-                                  color: AppColors.success,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            expense == null
+                                ? 'Sin gasto registrado'
+                                : 'Gasto registrado',
                           ),
+                          const SizedBox(height: 8),
+                          if (expense != null)
+                            Text(
+                              '${formatExpense(expense)} €',
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.copyWith(
+                                    color: AppColors.success,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
                         ],
                       ),
                     ),
@@ -85,8 +91,11 @@ class P07ResumenCompraScreen extends StatelessWidget {
                     label: 'Modificar importe',
                     icon: Icons.edit_outlined,
                     outlined: true,
-                    onPressed: () =>
-                        Navigator.pushNamed(context, '/registrar-gasto'),
+                    onPressed: () => Navigator.pushNamed(
+                      context,
+                      '/registrar-gasto',
+                      arguments: true,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   AppButton(
@@ -122,10 +131,7 @@ class _SummaryRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(label)),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );

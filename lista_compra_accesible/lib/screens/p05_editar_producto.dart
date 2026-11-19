@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../state/app_state.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
@@ -42,10 +43,10 @@ class _P05EditarProductoScreenState extends State<P05EditarProductoScreen> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
     context.read<AppState>().updateProduct(
-          widget.productId,
-          _nameController.text,
-          _quantity,
-        );
+      widget.productId,
+      _nameController.text,
+      _quantity,
+    );
     Navigator.pop(context);
   }
 
@@ -75,7 +76,8 @@ class _P05EditarProductoScreenState extends State<P05EditarProductoScreen> {
                     AppTextField(
                       controller: _nameController,
                       label: 'Nombre del producto',
-                      validator: (value) => value == null || value.trim().isEmpty
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
                           ? 'El nombre no puede estar vacío'
                           : null,
                     ),

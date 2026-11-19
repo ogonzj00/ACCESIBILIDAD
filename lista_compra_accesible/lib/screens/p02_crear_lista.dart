@@ -53,7 +53,8 @@ class _P02CrearListaScreenState extends State<P02CrearListaScreen> {
                       label: 'Nombre de la lista',
                       hint: 'Ej. Compra semanal',
                       textInputAction: TextInputAction.done,
-                      validator: (value) => value == null || value.trim().isEmpty
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
                           ? 'Introduce un nombre para la lista'
                           : null,
                     ),

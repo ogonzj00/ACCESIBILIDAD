@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../state/app_state.dart';
+import '../models/money.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_button.dart';
 import '../widgets/vigentes_calculator_dialog.dart';
@@ -13,7 +15,7 @@ class P01InicioScreen extends StatelessWidget {
       context: context,
       builder: (_) => VigentesCalculatorDialog(
         activeLists: state.activeLists,
-        activeTotal: state.activeListsTotal,
+        activeTotal: state.activeListsTotal / 100,
       ),
     );
   }
@@ -27,6 +29,7 @@ class P01InicioScreen extends StatelessWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        scrollable: true,
         title: const Text('Eliminar lista'),
         content: Text('¿Quieres eliminar "$listName" y su importe guardado?'),
         actions: [
@@ -70,9 +73,8 @@ class P01InicioScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'Organiza tu compra fácilmente',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: Theme.of(context).textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -121,10 +123,8 @@ class P01InicioScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '${state.activeListsTotal.toStringAsFixed(2)} €',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineMedium
+                              '${formatExpense(state.activeListsTotal)} €',
+                              style: Theme.of(context).textTheme.headlineMedium
                                   ?.copyWith(
                                     color: AppColors.success,
                                     fontWeight: FontWeight.bold,
@@ -147,6 +147,11 @@ class P01InicioScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     ...state.lists.map((list) {
+                      void openList() {
+                        state.selectList(list.id);
+                        Navigator.pushNamed(context, '/detalle-lista');
+                      }
+
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Card(
@@ -168,32 +173,34 @@ class P01InicioScreen extends StatelessWidget {
                                   children: [
                                     Expanded(
                                       child: InkWell(
-                                        onTap: () {
-                                          state.selectList(list.id);
-                                          Navigator.pushNamed(
-                                            context,
-                                            '/detalle-lista',
-                                          );
-                                        },
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              list.name,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleMedium,
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${list.products.length} productos · Importe: ${list.expense.toStringAsFixed(2)} €',
-                                              style: const TextStyle(
-                                                color: AppColors.secondaryText,
-                                                fontWeight: FontWeight.w600,
+                                        onTap: openList,
+                                        excludeFromSemantics: true,
+                                        canRequestFocus: false,
+                                        child: ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            minHeight: 48,
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                list.name,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleMedium,
                                               ),
-                                            ),
-                                          ],
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '${list.products.length} productos · ${list.expenseCents == null ? 'Sin gasto registrado' : '${formatExpense(list.expenseCents!)} €'}',
+                                                style: const TextStyle(
+                                                  color:
+                                                      AppColors.secondaryText,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -213,20 +220,28 @@ class P01InicioScreen extends StatelessWidget {
                                   ],
                                 ),
                                 const Divider(height: 20),
-                                Row(
+                                Wrap(
+                                  spacing: 12,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
                                   children: [
-                                    Expanded(
-                                      child: Row(
-                                        children: [
-                                          Switch(
-                                            value: list.isActive,
-                                            onChanged: (value) =>
-                                                state.toggleListActive(
-                                              list.id,
-                                              value,
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        MergeSemantics(
+                                          child: Semantics(
+                                            label: 'Vigencia de ${list.name}',
+                                            child: Switch(
+                                              value: list.isActive,
+                                              onChanged: (value) =>
+                                                  state.toggleListActive(
+                                                    list.id,
+                                                    value,
+                                                  ),
                                             ),
                                           ),
-                                          Flexible(
+                                        ),
+                                        Flexible(
+                                          child: ExcludeSemantics(
                                             child: Text(
                                               list.isActive
                                                   ? 'Vigente'
@@ -239,22 +254,19 @@ class P01InicioScreen extends StatelessWidget {
                                               ),
                                             ),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
                                     FilledButton.tonalIcon(
-                                      onPressed: () {
-                                        state.selectList(list.id);
-                                        Navigator.pushNamed(
-                                          context,
-                                          '/detalle-lista',
-                                        );
-                                      },
+                                      onPressed: openList,
                                       icon: const Icon(
                                         Icons.open_in_new,
                                         size: 18,
                                       ),
-                                      label: const Text('Abrir'),
+                                      label: Text(
+                                        'Abrir',
+                                        semanticsLabel: 'Abrir ${list.name}',
+                                      ),
                                     ),
                                   ],
                                 ),

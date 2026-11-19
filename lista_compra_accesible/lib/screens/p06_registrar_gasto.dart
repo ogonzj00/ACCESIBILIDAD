@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../state/app_state.dart';
+import '../models/money.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 
@@ -21,9 +23,9 @@ class _P06RegistrarGastoScreenState extends State<P06RegistrarGastoScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_initialized) return;
-    final currentExpense = context.read<AppState>().expense;
-    if (currentExpense > 0) {
-      _amountController.text = currentExpense.toStringAsFixed(2);
+    final currentExpense = context.read<AppState>().expenseCents;
+    if (currentExpense != null) {
+      _amountController.text = formatExpense(currentExpense);
     }
     _initialized = true;
   }
@@ -36,17 +38,20 @@ class _P06RegistrarGastoScreenState extends State<P06RegistrarGastoScreen> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    final normalized = _amountController.text.trim().replaceAll(',', '.');
-    final amount = double.tryParse(normalized);
-    if (amount == null) return;
+    final amount = parseExpense(_amountController.text);
+    if (amount == null || !context.read<AppState>().hasList) return;
     context.read<AppState>().setExpense(amount);
-    Navigator.pushReplacementNamed(context, '/resumen-compra');
+    if (ModalRoute.of(context)?.settings.arguments == true) {
+      Navigator.pop(context);
+    } else {
+      Navigator.pushReplacementNamed(context, '/resumen-compra');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    final currentExpense = state.expense;
+    final currentExpense = state.expenseCents;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Registrar gasto')),
@@ -82,19 +87,16 @@ class _P06RegistrarGastoScreenState extends State<P06RegistrarGastoScreen> {
                         if (value == null || value.trim().isEmpty) {
                           return 'Introduce un importe';
                         }
-                        final amount = double.tryParse(
-                          value.trim().replaceAll(',', '.'),
-                        );
-                        if (amount == null || amount < 0) {
-                          return 'Introduce una cantidad válida';
+                        if (parseExpense(value) == null) {
+                          return 'Introduce un importe válido, con hasta dos decimales y un máximo de 999999999,99 €';
                         }
                         return null;
                       },
                     ),
-                    if (currentExpense > 0) ...[
+                    if (currentExpense != null) ...[
                       const SizedBox(height: 12),
                       Text(
-                        'Último importe registrado: ${currentExpense.toStringAsFixed(2)} €',
+                        'Último importe registrado: ${formatExpense(currentExpense)} €',
                       ),
                     ],
                     const SizedBox(height: 24),

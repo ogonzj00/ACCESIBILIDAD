@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../models/shopping_list.dart';
+import '../models/money.dart';
 import '../theme/app_theme.dart';
 
 class VigentesCalculatorDialog extends StatefulWidget {
@@ -30,6 +32,7 @@ class _VigentesCalculatorDialogState extends State<VigentesCalculatorDialog> {
   }
 
   String _formatNumber(double value) {
+    if (!value.isFinite) return 'Resultado fuera de rango';
     if (value == value.roundToDouble()) {
       return value.toStringAsFixed(2);
     }
@@ -81,7 +84,16 @@ class _VigentesCalculatorDialogState extends State<VigentesCalculatorDialog> {
         result = _firstOperand! * second;
         break;
       case '÷':
-        result = second == 0 ? 0 : _firstOperand! / second;
+        if (second == 0) {
+          setState(() {
+            _display = 'No se puede dividir entre cero';
+            _firstOperand = null;
+            _operator = null;
+            _shouldResetDisplay = true;
+          });
+          return;
+        }
+        result = _firstOperand! / second;
         break;
     }
 
@@ -114,6 +126,7 @@ class _VigentesCalculatorDialogState extends State<VigentesCalculatorDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       title: const Text('Calculadora listas vigentes'),
       content: SizedBox(
         width: 360,
@@ -141,9 +154,13 @@ class _VigentesCalculatorDialogState extends State<VigentesCalculatorDialog> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Text(
-                          '${list.expense.toStringAsFixed(2)} €',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        Flexible(
+                          child: Text(
+                            list.expenseCents == null
+                                ? 'Sin gasto'
+                                : '${formatExpense(list.expenseCents!)} €',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ],
                     ),
@@ -171,12 +188,13 @@ class _VigentesCalculatorDialogState extends State<VigentesCalculatorDialog> {
                       ),
                     Semantics(
                       liveRegion: true,
-                      label: 'Resultado calculadora: $_display euros',
+                      label: 'Resultado calculadora: $_display',
+                      excludeSemantics: true,
                       child: Text(
-                        '$_display €',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
+                        _display.startsWith(RegExp(r'[-0-9]'))
+                            ? '$_display €'
+                            : _display,
+                        style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: AppColors.success,
@@ -207,7 +225,11 @@ class _VigentesCalculatorDialogState extends State<VigentesCalculatorDialog> {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: _calculate,
-                  child: const Text('=', style: TextStyle(fontSize: 22)),
+                  child: const Text(
+                    '=',
+                    semanticsLabel: 'Calcular resultado',
+                    style: TextStyle(fontSize: 22),
+                  ),
                 ),
               ),
             ],
@@ -224,40 +246,51 @@ class _VigentesCalculatorDialogState extends State<VigentesCalculatorDialog> {
   }
 
   Widget _buildButtonRow(List<String> keys) {
-    return Row(
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
       children: keys.map((key) {
         final isOp = ['+', '-', '×', '÷'].contains(key);
         final isClear = key == 'C';
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 3),
-            child: SizedBox(
-              height: 46,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  backgroundColor: isOp
-                      ? AppColors.primary.withAlpha(24)
-                      : isClear
-                          ? AppColors.error.withAlpha(20)
-                          : AppColors.surface,
-                  foregroundColor: isClear ? AppColors.error : AppColors.text,
-                ),
-                onPressed: () {
-                  if (isClear) {
-                    _clear();
-                  } else if (isOp) {
-                    _onOperator(key);
-                  } else {
-                    _onDigit(key);
-                  }
-                },
-                child: Text(
+        return SizedBox(
+          width: 48,
+          height: 56,
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.zero,
+              backgroundColor: isOp
+                  ? AppColors.primary.withAlpha(24)
+                  : isClear
+                  ? AppColors.error.withAlpha(20)
+                  : AppColors.surface,
+              foregroundColor: isClear ? AppColors.error : AppColors.text,
+            ),
+            onPressed: () {
+              if (isClear) {
+                _clear();
+              } else if (isOp) {
+                _onOperator(key);
+              } else {
+                _onDigit(key);
+              }
+            },
+            child: Semantics(
+              excludeSemantics: true,
+              label:
+                  const {
+                    'C': 'Borrar',
+                    '+': 'Sumar',
+                    '-': 'Restar',
+                    '×': 'Multiplicar',
+                    '÷': 'Dividir',
+                    '.': 'Separador decimal',
+                  }[key] ??
                   key,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+              child: Text(
+                key,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),

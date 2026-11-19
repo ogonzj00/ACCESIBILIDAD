@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../state/app_state.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
@@ -26,10 +27,7 @@ class _P04AnadirProductoScreenState extends State<P04AnadirProductoScreen> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    context.read<AppState>().addProduct(
-          _nameController.text,
-          _quantity,
-        );
+    context.read<AppState>().addProduct(_nameController.text, _quantity);
     Navigator.pop(context);
   }
 
@@ -54,7 +52,8 @@ class _P04AnadirProductoScreenState extends State<P04AnadirProductoScreen> {
                       hint: 'Ej. Leche',
                       autofocus: true,
                       textInputAction: TextInputAction.done,
-                      validator: (value) => value == null || value.trim().isEmpty
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
                           ? 'Escribe el nombre del producto'
                           : null,
                     ),
